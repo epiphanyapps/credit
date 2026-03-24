@@ -31,6 +31,7 @@
     "build:android:prod": "eas build --profile production --platform android --local"
   },
   "dependencies": {
+    "@credit/shared": "workspace:*",
     "@expo-google-fonts/space-grotesk": "^0.4.0",
     "@expo/metro-runtime": "~55.0.6",
     "@react-navigation/bottom-tabs": "^7.2.0",
@@ -42,9 +43,12 @@
     "expo-application": "~55.0.8",
     "expo-build-properties": "~55.0.9",
     "expo-dev-client": "~55.0.11",
+    "expo-document-picker": "^55.0.9",
+    "expo-file-system": "^55.0.11",
     "expo-font": "~55.0.4",
     "expo-linking": "~55.0.7",
     "expo-localization": "~55.0.8",
+    "expo-pdf-text-extract": "^1.0.1",
     "expo-splash-screen": "~55.0.10",
     "expo-system-ui": "~55.0.9",
     "i18next": "^23.14.0",
