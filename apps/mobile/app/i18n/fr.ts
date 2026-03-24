@@ -45,6 +45,12 @@ const fr: Translations = {
     tapToLogIn: "Appuyez pour vous connecter!",
     hint: "Astuce : vous pouvez utiliser n'importe quelle adresse e-mail et votre mot de passe préféré :)",
   },
+  mainNavigator: {
+    dashboardTab: "Dashboard",
+    reportTab: "Report",
+    disputesTab: "Disputes",
+    learnTab: "Learn",
+  },
   demoNavigator: {
     componentsTab: "Composants",
     debugTab: "Débogage",

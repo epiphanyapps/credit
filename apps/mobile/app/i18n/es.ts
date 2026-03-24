@@ -45,6 +45,12 @@ const es: Translations = {
     tapToLogIn: "¡Presiona acá para iniciar sesión!",
     hint: "Consejo: puedes usar cualquier email y tu contraseña preferida :)",
   },
+  mainNavigator: {
+    dashboardTab: "Dashboard",
+    reportTab: "Report",
+    disputesTab: "Disputes",
+    learnTab: "Learn",
+  },
   demoNavigator: {
     componentsTab: "Componentes",
     debugTab: "Debug",

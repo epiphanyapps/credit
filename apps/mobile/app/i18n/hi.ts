@@ -44,6 +44,12 @@ const hi: Translations = {
     tapToLogIn: "लॉग इन करने के लिए टैप करें!",
     hint: "संकेत: आप किसी भी ईमेल पते और अपने पसंदीदा पासवर्ड का उपयोग कर सकते हैं :)",
   },
+  mainNavigator: {
+    dashboardTab: "Dashboard",
+    reportTab: "Report",
+    disputesTab: "Disputes",
+    learnTab: "Learn",
+  },
   demoNavigator: {
     componentsTab: "कंपोनेंट्स",
     debugTab: "डीबग",

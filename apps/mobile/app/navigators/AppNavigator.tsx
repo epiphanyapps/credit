@@ -1,9 +1,3 @@
-/**
- * The app navigator (formerly "AppNavigator" and "MainNavigator") is used for the primary
- * navigation flows of your app.
- * Generally speaking, it will contain an auth flow (registration, login, forgot password)
- * and a "main" flow which the user will use once logged in.
- */
 import { NavigationContainer } from "@react-navigation/native"
 import { createNativeStackNavigator } from "@react-navigation/native-stack"
 
@@ -12,19 +6,20 @@ import { useAuth } from "@/context/AuthContext"
 import { ErrorBoundary } from "@/screens/ErrorScreen/ErrorBoundary"
 import { LoginScreen } from "@/screens/LoginScreen"
 import { WelcomeScreen } from "@/screens/WelcomeScreen"
+import { ImportReportScreen } from "@/screens/ImportReportScreen"
+import { ReportReviewScreen } from "@/screens/ReportReviewScreen"
+import { DisputeDetailScreen } from "@/screens/DisputeDetailScreen"
+import { CreateDisputeScreen } from "@/screens/CreateDisputeScreen"
+import { LetterPreviewScreen } from "@/screens/LetterPreviewScreen"
+import { SettlementScreen } from "@/screens/SettlementScreen"
 import { useAppTheme } from "@/theme/context"
 
-import { DemoNavigator } from "./DemoNavigator"
+import { MainNavigator } from "./MainNavigator"
 import type { AppStackParamList, NavigationProps } from "./navigationTypes"
 import { navigationRef, useBackButtonHandler } from "./navigationUtilities"
 
-/**
- * This is a list of all the route names that will exit the app if the back button
- * is pressed while in that screen. Only affects Android.
- */
 const exitRoutes = Config.exitRoutes
 
-// Documentation: https://reactnavigation.org/docs/stack-navigator/
 const Stack = createNativeStackNavigator<AppStackParamList>()
 
 const AppStack = () => {
@@ -48,8 +43,15 @@ const AppStack = () => {
       {isAuthenticated ? (
         <>
           <Stack.Screen name="Welcome" component={WelcomeScreen} />
+          <Stack.Screen name="Main" component={MainNavigator} />
 
-          <Stack.Screen name="Demo" component={DemoNavigator} />
+          {/* Dispute flow screens (pushed on top of tabs) */}
+          <Stack.Screen name="ImportReport" component={ImportReportScreen} />
+          <Stack.Screen name="ReportReview" component={ReportReviewScreen} />
+          <Stack.Screen name="DisputeDetail" component={DisputeDetailScreen} />
+          <Stack.Screen name="CreateDispute" component={CreateDisputeScreen} />
+          <Stack.Screen name="LetterPreview" component={LetterPreviewScreen} />
+          <Stack.Screen name="Settlement" component={SettlementScreen} />
         </>
       ) : (
         <>
@@ -57,7 +59,6 @@ const AppStack = () => {
         </>
       )}
 
-      {/** 🔥 Your screens go here */}
       {/* IGNITE_GENERATOR_ANCHOR_APP_STACK_SCREENS */}
     </Stack.Navigator>
   )

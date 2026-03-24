@@ -7,20 +7,26 @@ import {
 } from "@react-navigation/native"
 import { NativeStackScreenProps } from "@react-navigation/native-stack"
 
-// Demo Tab Navigator types
-export type DemoTabParamList = {
-  DemoCommunity: undefined
-  DemoShowroom: { queryIndex?: string; itemIndex?: string }
-  DemoDebug: undefined
-  DemoPodcastList: undefined
+// Main Tab Navigator types
+export type MainTabParamList = {
+  Dashboard: undefined
+  CreditReport: undefined
+  Disputes: undefined
+  Learn: undefined
 }
 
 // App Stack Navigator types
 export type AppStackParamList = {
   Welcome: undefined
   Login: undefined
-  Demo: NavigatorScreenParams<DemoTabParamList>
-  // 🔥 Your screens go here
+  Main: NavigatorScreenParams<MainTabParamList>
+  // Dispute flow screens (pushed on top of tabs)
+  ImportReport: undefined
+  ReportReview: { reportId: string }
+  DisputeDetail: { disputeId: string }
+  CreateDispute: { itemId: string }
+  LetterPreview: { disputeId: string }
+  Settlement: { itemId: string }
   // IGNITE_GENERATOR_ANCHOR_APP_STACK_PARAM_LIST
 }
 
@@ -28,6 +34,19 @@ export type AppStackScreenProps<T extends keyof AppStackParamList> = NativeStack
   AppStackParamList,
   T
 >
+
+export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScreenProps<
+  BottomTabScreenProps<MainTabParamList, T>,
+  AppStackScreenProps<keyof AppStackParamList>
+>
+
+// Legacy Demo types (kept for existing demo screens)
+export type DemoTabParamList = {
+  DemoCommunity: undefined
+  DemoShowroom: { queryIndex?: string; itemIndex?: string }
+  DemoDebug: undefined
+  DemoPodcastList: undefined
+}
 
 export type DemoTabScreenProps<T extends keyof DemoTabParamList> = CompositeScreenProps<
   BottomTabScreenProps<DemoTabParamList, T>,

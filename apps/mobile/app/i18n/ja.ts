@@ -45,6 +45,12 @@ const ja: Translations = {
     tapToLogIn: "タップしてログインしよう！",
     hint: "ヒント: お好みのメールアドレスとパスワードを使ってください :)",
   },
+  mainNavigator: {
+    dashboardTab: "Dashboard",
+    reportTab: "Report",
+    disputesTab: "Disputes",
+    learnTab: "Learn",
+  },
   demoNavigator: {
     componentsTab: "コンポーネント",
     debugTab: "デバッグ",

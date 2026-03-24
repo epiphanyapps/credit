@@ -43,6 +43,12 @@ const en = {
     tapToLogIn: "Tap to log in!",
     hint: "Hint: you can use any email address and your favorite password :)",
   },
+  mainNavigator: {
+    dashboardTab: "Dashboard",
+    reportTab: "Report",
+    disputesTab: "Disputes",
+    learnTab: "Learn",
+  },
   demoNavigator: {
     componentsTab: "Components",
     debugTab: "Debug",
