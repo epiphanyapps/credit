@@ -25,6 +25,7 @@ import { KeyboardProvider } from "react-native-keyboard-controller"
 import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-context"
 
 import { AuthProvider } from "./context/AuthContext"
+import { CreditReportProvider } from "./context/CreditReportContext"
 import { initI18n } from "./i18n"
 import { AppNavigator } from "./navigators/AppNavigator"
 import { useNavigationPersistence } from "./navigators/navigationUtilities"
@@ -43,16 +44,20 @@ const config = {
       path: "",
     },
     Welcome: "welcome",
-    Demo: {
+    Main: {
       screens: {
-        DemoShowroom: {
-          path: "showroom/:queryIndex?/:itemIndex?",
-        },
-        DemoDebug: "debug",
-        DemoPodcastList: "podcast",
-        DemoCommunity: "community",
+        Dashboard: "dashboard",
+        CreditReport: "report",
+        Disputes: "disputes",
+        Learn: "learn",
       },
     },
+    ImportReport: "import",
+    ReportReview: "review/:reportId",
+    DisputeDetail: "dispute/:disputeId",
+    CreateDispute: "create-dispute/:itemId",
+    LetterPreview: "letter/:disputeId",
+    Settlement: "settlement/:itemId",
   },
 }
 
@@ -97,13 +102,15 @@ export function App() {
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <KeyboardProvider>
         <AuthProvider>
-          <ThemeProvider>
-            <AppNavigator
-              linking={linking}
-              initialState={initialNavigationState}
-              onStateChange={onNavigationStateChange}
-            />
-          </ThemeProvider>
+          <CreditReportProvider>
+            <ThemeProvider>
+              <AppNavigator
+                linking={linking}
+                initialState={initialNavigationState}
+                onStateChange={onNavigationStateChange}
+              />
+            </ThemeProvider>
+          </CreditReportProvider>
         </AuthProvider>
       </KeyboardProvider>
     </SafeAreaProvider>

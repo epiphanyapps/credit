@@ -1,9 +1,11 @@
 import { FC, useState } from "react"
-import { ActivityIndicator, Alert, View, ViewStyle } from "react-native"
+import { ActivityIndicator, View, ViewStyle } from "react-native"
 
 import { Button } from "@/components/Button"
 import { Screen } from "@/components/Screen"
 import { Text } from "@/components/Text"
+import { TextField } from "@/components/TextField"
+import { useCreditReport } from "@/context/CreditReportContext"
 import type { AppStackScreenProps } from "@/navigators/navigationTypes"
 import { pickAndExtractPDF, analyzeReportWithAI } from "@/services/creditReport"
 import type { ParsedCreditReport } from "@/services/creditReport"
@@ -15,9 +17,11 @@ type Status = "idle" | "extracting" | "analyzing" | "done" | "error"
 
 export const ImportReportScreen: FC<AppStackScreenProps<"ImportReport">> = ({ navigation }) => {
   const { themed } = useAppTheme()
+  const { apiKey, setApiKey, setReport: saveReport } = useCreditReport()
   const [status, setStatus] = useState<Status>("idle")
   const [statusMessage, setStatusMessage] = useState("")
   const [report, setReport] = useState<ParsedCreditReport | null>(null)
+  const [showApiKeyInput, setShowApiKeyInput] = useState(false)
 
   useHeader(
     {
@@ -29,6 +33,11 @@ export const ImportReportScreen: FC<AppStackScreenProps<"ImportReport">> = ({ na
   )
 
   const handleUploadPDF = async () => {
+    if (!apiKey) {
+      setShowApiKeyInput(true)
+      return
+    }
+
     try {
       setStatus("extracting")
       setStatusMessage("Selecting and extracting text from PDF...")
@@ -45,18 +54,6 @@ export const ImportReportScreen: FC<AppStackScreenProps<"ImportReport">> = ({ na
       )
       setStatus("analyzing")
 
-      // TODO: Get API key from secure storage / environment config
-      const apiKey = "" // User must configure this
-      if (!apiKey) {
-        Alert.alert(
-          "API Key Required",
-          "Claude API key is needed to analyze your credit report. This will be configurable in settings.",
-        )
-        setStatus("idle")
-        setStatusMessage("")
-        return
-      }
-
       const parsed = await analyzeReportWithAI({
         apiKey,
         text: extracted.text,
@@ -64,13 +61,11 @@ export const ImportReportScreen: FC<AppStackScreenProps<"ImportReport">> = ({ na
       })
 
       setReport(parsed)
+      saveReport(parsed)
       setStatus("done")
       setStatusMessage(
         `Found ${parsed.summary.totalAccounts} accounts, ${parsed.summary.negativeItemCount} items flagged for dispute.`,
       )
-
-      // TODO: Save to MST store, navigate to review
-      // navigation.navigate("ReportReview", { reportId: "..." })
     } catch (error) {
       setStatus("error")
       setStatusMessage(error instanceof Error ? error.message : "An error occurred")
@@ -79,80 +74,107 @@ export const ImportReportScreen: FC<AppStackScreenProps<"ImportReport">> = ({ na
 
   return (
     <Screen preset="scroll" contentContainerStyle={themed($container)}>
-      <View style={themed($card)}>
-        <Text preset="subheading" text="Step 1: Get Your Free Report" />
-        <Text
-          style={themed($body)}
-          text="Visit annualcreditreport.com to download your free credit reports from all 3 bureaus. You're entitled to free weekly reports."
-        />
-      </View>
-
-      <View style={themed($card)}>
-        <Text preset="subheading" text="Step 2: Upload PDF" />
-        <Text
-          style={themed($body)}
-          text="Upload the PDF and our AI will analyze it, identify every account, and flag items that may be eligible for dispute."
-        />
-
-        {status === "idle" || status === "error" ? (
+      {showApiKeyInput && !apiKey ? (
+        <View style={themed($card)}>
+          <Text preset="subheading" text="API Key Required" />
+          <Text
+            style={themed($body)}
+            text="Enter your Claude API key to enable AI-powered credit report analysis. Your key is stored securely on-device."
+          />
+          <TextField
+            placeholder="sk-ant-..."
+            onChangeText={setApiKey}
+            autoCapitalize="none"
+            autoCorrect={false}
+            containerStyle={themed($textField)}
+          />
           <Button
-            text="Select Credit Report PDF"
+            text="Save & Continue"
             preset="reversed"
-            onPress={handleUploadPDF}
+            onPress={() => {
+              if (apiKey) {
+                setShowApiKeyInput(false)
+                handleUploadPDF()
+              }
+            }}
             style={themed($button)}
           />
-        ) : null}
-
-        {(status === "extracting" || status === "analyzing") && (
-          <View style={themed($loadingContainer)}>
-            <ActivityIndicator size="large" />
-            <Text style={themed($statusText)} text={statusMessage} />
-          </View>
-        )}
-
-        {status === "error" && (
-          <Text style={themed($errorText)} text={statusMessage} />
-        )}
-
-        {status === "done" && report && (
-          <View style={themed($resultsContainer)}>
-            <Text style={themed($successText)} text={statusMessage} />
-            <View style={themed($statsRow)}>
-              <StatBox label="Accounts" value={report.summary.totalAccounts} themed={themed} />
-              <StatBox label="Flagged" value={report.summary.negativeItemCount} themed={themed} />
-              <StatBox label="Inquiries" value={report.summary.inquiryCount} themed={themed} />
-            </View>
-            <Button
-              text="Review Flagged Items"
-              preset="reversed"
-              onPress={() => {
-                // TODO: pass report data via store
-                navigation.navigate("ReportReview", { reportId: report.bureau })
-              }}
-              style={themed($button)}
+        </View>
+      ) : (
+        <>
+          <View style={themed($card)}>
+            <Text preset="subheading" text="Step 1: Get Your Free Report" />
+            <Text
+              style={themed($body)}
+              text="Visit annualcreditreport.com to download your free credit reports from all 3 bureaus. You're entitled to free weekly reports."
             />
           </View>
-        )}
-      </View>
 
-      <View style={themed($card)}>
-        <Text preset="subheading" text="What We Look For" />
-        <Text style={themed($body)} text="• Accounts you don't recognize" />
-        <Text style={themed($body)} text="• Incorrect balances or dates" />
-        <Text style={themed($body)} text="• Collections (especially old ones)" />
-        <Text style={themed($body)} text="• Late payments on good accounts" />
-        <Text style={themed($body)} text="• Unauthorized hard inquiries" />
-        <Text style={themed($body)} text="• Items older than 7 years still reporting" />
-        <Text style={themed($body)} text="• Personal information errors" />
-      </View>
+          <View style={themed($card)}>
+            <Text preset="subheading" text="Step 2: Upload PDF" />
+            <Text
+              style={themed($body)}
+              text="Upload the PDF and our AI will analyze it, identify every account, and flag items that may be eligible for dispute."
+            />
 
-      <View style={themed($card)}>
-        <Text preset="subheading" text="Privacy" />
-        <Text
-          style={themed($body)}
-          text="Your credit report data is processed on-device and sent directly to the AI for analysis. We never store your raw credit report on our servers."
-        />
-      </View>
+            {(status === "idle" || status === "error") && (
+              <Button
+                text="Select Credit Report PDF"
+                preset="reversed"
+                onPress={handleUploadPDF}
+                style={themed($button)}
+              />
+            )}
+
+            {(status === "extracting" || status === "analyzing") && (
+              <View style={themed($loadingContainer)}>
+                <ActivityIndicator size="large" />
+                <Text style={themed($statusText)} text={statusMessage} />
+              </View>
+            )}
+
+            {status === "error" && (
+              <Text style={themed($errorText)} text={statusMessage} />
+            )}
+
+            {status === "done" && report && (
+              <View style={themed($resultsContainer)}>
+                <Text style={themed($successText)} text={statusMessage} />
+                <View style={themed($statsRow)}>
+                  <StatBox label="Accounts" value={report.summary.totalAccounts} themed={themed} />
+                  <StatBox label="Flagged" value={report.summary.negativeItemCount} themed={themed} />
+                  <StatBox label="Inquiries" value={report.summary.inquiryCount} themed={themed} />
+                </View>
+                <Button
+                  text="Review Flagged Items"
+                  preset="reversed"
+                  onPress={() => navigation.navigate("ReportReview", { reportId: report.bureau })}
+                  style={themed($button)}
+                />
+              </View>
+            )}
+          </View>
+
+          <View style={themed($card)}>
+            <Text preset="subheading" text="What We Look For" />
+            <Text style={themed($body)} text="• Accounts you don't recognize" />
+            <Text style={themed($body)} text="• Incorrect balances or dates" />
+            <Text style={themed($body)} text="• Collections (especially old ones)" />
+            <Text style={themed($body)} text="• Late payments on good accounts" />
+            <Text style={themed($body)} text="• Unauthorized hard inquiries" />
+            <Text style={themed($body)} text="• Items older than 7 years still reporting" />
+            <Text style={themed($body)} text="• Personal information errors" />
+          </View>
+
+          <View style={themed($card)}>
+            <Text preset="subheading" text="Privacy" />
+            <Text
+              style={themed($body)}
+              text="Your credit report data is processed on-device and sent directly to the AI for analysis. We never store your raw credit report on our servers."
+            />
+          </View>
+        </>
+      )}
     </Screen>
   )
 }
@@ -194,6 +216,10 @@ const $button: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   marginTop: spacing.md,
 })
 
+const $textField: ThemedStyle<ViewStyle> = ({ spacing }) => ({
+  marginTop: spacing.md,
+})
+
 const $loadingContainer: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   alignItems: "center",
   paddingVertical: spacing.lg,
@@ -210,8 +236,7 @@ const $errorText: ThemedStyle<ViewStyle> = ({ colors, spacing }) => ({
   marginTop: spacing.sm,
 })
 
-const $successText: ThemedStyle<ViewStyle> = ({ colors, spacing }) => ({
-  color: colors.palette.secondary500,
+const $successText: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   marginTop: spacing.sm,
   marginBottom: spacing.md,
 })
