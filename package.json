@@ -1,0 +1,9 @@
+{
+  "name": "credit",
+  "private": true,
+  "scripts": {
+    "mobile": "pnpm --filter mobile",
+    "web": "pnpm --filter web",
+    "shared": "pnpm --filter @credit/shared"
+  }
+}
