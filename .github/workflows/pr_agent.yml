@@ -1,0 +1,60 @@
+name: AI PR Reviewer
+
+# Qodo PR-Agent driven by our own Anthropic API key (no Qodo subscription).
+# Manual commands work in any PR comment: /review  /describe  /improve  /ask "..."
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+  issue_comment:
+    types: [created]
+
+concurrency:
+  group: pr-agent-${{ github.event.pull_request.number || github.event.issue.number }}
+  # MUST stay false. GitHub evaluates concurrency at the workflow level, BEFORE the
+  # job-level `if:`. A bot comment therefore joins this group and cancels an
+  # in-flight review before skipping itself - so Cursor/Dependabot commenting on a
+  # fresh PR silently kills the real review. Observed on bingo#66.
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  pr_agent:
+    # Never let the bot trigger itself; only act on comments that belong to a PR.
+    # Fork PRs get no secrets and a read-only token, so the job would fail loudly
+    # on every external contribution. Skip them instead. (Found by PR-Agent itself.)
+    if: >-
+      github.event.sender.type != 'Bot' &&
+      (github.event_name == 'pull_request' || github.event.issue.pull_request) &&
+      (github.event_name != 'pull_request' ||
+       github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Run PR Agent
+        # Pinned by digest to pragent/pr-agent:0.44.0-github_action.
+        # The qodo-ai/pr-agent@main action builds FROM pragent/pr-agent:github_action,
+        # a mutable tag - referencing the digest directly is what actually pins the code.
+        uses: docker://pragent/pr-agent@sha256:b70f4a41621a838cb0dfbc199f86f595ab9cfe698ac4b19ec2b5562b05d49858
+        env:
+          # --- model ---
+          CONFIG.MODEL: anthropic/claude-opus-5
+          CONFIG.FALLBACK_MODELS: '@json ["anthropic/claude-sonnet-5"]'
+          # Default is 32000 regardless of the model's real window; raise it so large
+          # diffs aren't silently truncated. Opus 5 supports 1M if you ever need more.
+          CONFIG.MAX_MODEL_TOKENS: "64000"
+          # Feed repo conventions to the reviewer if these files exist.
+          CONFIG.REPO_CONTEXT_FILES: '@json ["CLAUDE.md", "AGENTS.md"]'
+
+          # --- credentials ---
+          ANTHROPIC.KEY: ${{ secrets.ANTHROPIC_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          # --- what runs automatically ---
+          GITHUB_ACTION_CONFIG.AUTO_DESCRIBE: "true"
+          GITHUB_ACTION_CONFIG.AUTO_REVIEW: "true"
+          GITHUB_ACTION_CONFIG.AUTO_IMPROVE: "false"
