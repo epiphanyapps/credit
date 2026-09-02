@@ -11,7 +11,11 @@ on:
 
 concurrency:
   group: pr-agent-${{ github.event.pull_request.number || github.event.issue.number }}
-  cancel-in-progress: true
+  # MUST stay false. GitHub evaluates concurrency at the workflow level, BEFORE the
+  # job-level `if:`. A bot comment therefore joins this group and cancels an
+  # in-flight review before skipping itself - so Cursor/Dependabot commenting on a
+  # fresh PR silently kills the real review. Observed on bingo#66.
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -21,9 +25,13 @@ permissions:
 jobs:
   pr_agent:
     # Never let the bot trigger itself; only act on comments that belong to a PR.
+    # Fork PRs get no secrets and a read-only token, so the job would fail loudly
+    # on every external contribution. Skip them instead. (Found by PR-Agent itself.)
     if: >-
       github.event.sender.type != 'Bot' &&
-      (github.event_name == 'pull_request' || github.event.issue.pull_request)
+      (github.event_name == 'pull_request' || github.event.issue.pull_request) &&
+      (github.event_name != 'pull_request' ||
+       github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
